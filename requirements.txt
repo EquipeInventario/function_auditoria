@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 pymysql
+pymssql
 python-dotenv
 pydantic
 azure-functions
