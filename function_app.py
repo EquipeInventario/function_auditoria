@@ -1,7 +1,7 @@
 import azure.functions as func
 from azure.functions import AsgiMiddleware
 
-from main_azure_function import fastapi_app
+from main import fastapi_app
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
