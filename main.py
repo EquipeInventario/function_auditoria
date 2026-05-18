@@ -36,6 +36,8 @@ TABLES = {
     "estoque": {"db": DB_NAME_BASE, "pk": "ID"},
     "historico_alteracoes": {"db": DB_NAME_BASE, "pk": "ID"},
     "historico_historico": {"db": DB_NAME_BASE, "pk": "ID"},
+    "historico_recebimento": {"db": DB_NAME_BASE, "pk": "ID"},
+    "historico_expedicao": {"db": DB_NAME_BASE, "pk": "ID"},
     "produtos": {"db": DB_NAME_BASE, "pk": "ID"},
     "log": {"db": DB_NAME_INVENTARIO, "pk": "id"},
 }
@@ -718,22 +720,22 @@ def login(data: Dict[str, Any]):
         return {"status": "ok", "usuario": user}
     finally:
         conn.close()
-
+        
 # =========================================================
-# HISTORICO OPERACOES
+# HISTORICO RECEBIMENTO
 # =========================================================
 
-@fastapi_app.get("/historico-operacoes")
-def listar_historico_operacoes(request: Request):
-    return _select_all("historico_historico", request)
+@fastapi_app.get("/historico-recebimento")
+def listar_historico_recebimento(request: Request):
+    return _select_all("historico_recebimento", request)
 
 
-@fastapi_app.get("/historico-operacoes/paginado")
-def listar_historico_operacoes_paginado(
+@fastapi_app.get("/historico-recebimento/paginado")
+def listar_historico_recebimento_paginado(
     limit: int = 50,
     offset: int = 0,
 ):
-    conn, _ = _open_db("historico_historico")
+    conn, _ = _open_db("historico_recebimento")
 
     try:
 
@@ -742,7 +744,7 @@ def listar_historico_operacoes_paginado(
             cursor.execute(
                 """
                 SELECT *
-                FROM historico_historico
+                FROM historico_recebimento
                 ORDER BY ID DESC
                 LIMIT %s OFFSET %s
                 """,
@@ -755,30 +757,30 @@ def listar_historico_operacoes_paginado(
         conn.close()
 
 
-@fastapi_app.get("/historico-operacoes/{item_id}")
-def obter_historico_operacao(item_id: int):
-    return _select_by_id("historico_historico", item_id)
+@fastapi_app.get("/historico-recebimento/{item_id}")
+def obter_historico_recebimento(item_id: int):
+    return _select_by_id("historico_recebimento", item_id)
 
 
-@fastapi_app.post("/historico-operacoes")
-def inserir_historico_operacao(data: Dict[str, Any]):
-    return _insert_row("historico_historico", data)
+@fastapi_app.post("/historico-recebimento")
+def inserir_historico_recebimento(data: Dict[str, Any]):
+    return _insert_row("historico_recebimento", data)
 
 
-@fastapi_app.put("/historico-operacoes/{item_id}")
-def atualizar_historico_operacao(item_id: int, data: Dict[str, Any]):
-    return _update_row("historico_historico", item_id, data)
+@fastapi_app.put("/historico-recebimento/{item_id}")
+def atualizar_historico_recebimento(item_id: int, data: Dict[str, Any]):
+    return _update_row("historico_recebimento", item_id, data)
 
 
-@fastapi_app.delete("/historico-operacoes/{item_id}")
-def deletar_historico_operacao(item_id: int):
-    return _delete_row("historico_historico", item_id)
+@fastapi_app.delete("/historico-recebimento/{item_id}")
+def deletar_historico_recebimento(item_id: int):
+    return _delete_row("historico_recebimento", item_id)
 
 
-@fastapi_app.get("/historico-operacoes/checklist/{checklist}")
-def historico_operacoes_por_checklist(checklist: str):
+@fastapi_app.get("/historico-recebimento/checklist/{checklist}")
+def historico_recebimento_por_checklist(checklist: str):
 
-    conn, _ = _open_db("historico_historico")
+    conn, _ = _open_db("historico_recebimento")
 
     try:
 
@@ -787,7 +789,87 @@ def historico_operacoes_por_checklist(checklist: str):
             cursor.execute(
                 """
                 SELECT *
-                FROM historico_historico
+                FROM historico_recebimento
+                WHERE CHECKLIST_MASTER = %s
+                ORDER BY ID DESC
+                """,
+                (checklist,),
+            )
+
+            return cursor.fetchall()
+
+    finally:
+        conn.close()
+
+# =========================================================
+# HISTORICO EXPEDICAO
+# =========================================================
+
+@fastapi_app.get("/historico-expedicao")
+def listar_historico_expedicao(request: Request):
+    return _select_all("historico_expedicao", request)
+
+
+@fastapi_app.get("/historico-expedicao/paginado")
+def listar_historico_expedicao_paginado(
+    limit: int = 50,
+    offset: int = 0,
+):
+    conn, _ = _open_db("historico_expedicao")
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM historico_expedicao
+                ORDER BY ID DESC
+                LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+
+            return cursor.fetchall()
+
+    finally:
+        conn.close()
+
+
+@fastapi_app.get("/historico-expedicao/{item_id}")
+def obter_historico_expedicao(item_id: int):
+    return _select_by_id("historico_expedicao", item_id)
+
+
+@fastapi_app.post("/historico-expedicao")
+def inserir_historico_expedicao(data: Dict[str, Any]):
+    return _insert_row("historico_expedicao", data)
+
+
+@fastapi_app.put("/historico-expedicao/{item_id}")
+def atualizar_historico_expedicao(item_id: int, data: Dict[str, Any]):
+    return _update_row("historico_expedicao", item_id, data)
+
+
+@fastapi_app.delete("/historico-expedicao/{item_id}")
+def deletar_historico_expedicao(item_id: int):
+    return _delete_row("historico_expedicao", item_id)
+
+
+@fastapi_app.get("/historico-expedicao/checklist/{checklist}")
+def historico_expedicao_por_checklist(checklist: str):
+
+    conn, _ = _open_db("historico_expedicao")
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM historico_expedicao
                 WHERE CHECKLIST_MASTER = %s
                 ORDER BY ID DESC
                 """,
