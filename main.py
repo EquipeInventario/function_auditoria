@@ -593,6 +593,31 @@ def sugestoes_estoque():
 def listar_historico(request: Request):
     return _select_all("historico_alteracoes", request)
 
+@fastapi_app.get("/historico/paginado")
+def listar_historico_paginado(
+    limit: int = 50,
+    offset: int = 0,
+):
+    conn, _ = _open_db("historico_alteracoes")
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM historico_alteracoes
+                ORDER BY ID DESC
+                LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+
+            return cursor.fetchall()
+
+    finally:
+        conn.close()
 
 @fastapi_app.get("/historico/{item_id}")
 def obter_historico(item_id: int):
