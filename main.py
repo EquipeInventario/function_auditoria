@@ -35,6 +35,7 @@ DB_NAME_INVENTARIO = os.getenv("DB_NAME_INVENTARIO", "inventario")
 TABLES = {
     "estoque": {"db": DB_NAME_BASE, "pk": "ID"},
     "historico_alteracoes": {"db": DB_NAME_BASE, "pk": "ID"},
+    "historico_historico": {"db": DB_NAME_BASE, "pk": "ID"},
     "produtos": {"db": DB_NAME_BASE, "pk": "ID"},
     "log": {"db": DB_NAME_INVENTARIO, "pk": "id"},
 }
@@ -715,5 +716,85 @@ def login(data: Dict[str, Any]):
             raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
 
         return {"status": "ok", "usuario": user}
+    finally:
+        conn.close()
+
+# =========================================================
+# HISTORICO OPERACOES
+# =========================================================
+
+@fastapi_app.get("/historico-operacoes")
+def listar_historico_operacoes(request: Request):
+    return _select_all("historico_historico", request)
+
+
+@fastapi_app.get("/historico-operacoes/paginado")
+def listar_historico_operacoes_paginado(
+    limit: int = 50,
+    offset: int = 0,
+):
+    conn, _ = _open_db("historico_historico")
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM historico_historico
+                ORDER BY ID DESC
+                LIMIT %s OFFSET %s
+                """,
+                (limit, offset),
+            )
+
+            return cursor.fetchall()
+
+    finally:
+        conn.close()
+
+
+@fastapi_app.get("/historico-operacoes/{item_id}")
+def obter_historico_operacao(item_id: int):
+    return _select_by_id("historico_historico", item_id)
+
+
+@fastapi_app.post("/historico-operacoes")
+def inserir_historico_operacao(data: Dict[str, Any]):
+    return _insert_row("historico_historico", data)
+
+
+@fastapi_app.put("/historico-operacoes/{item_id}")
+def atualizar_historico_operacao(item_id: int, data: Dict[str, Any]):
+    return _update_row("historico_historico", item_id, data)
+
+
+@fastapi_app.delete("/historico-operacoes/{item_id}")
+def deletar_historico_operacao(item_id: int):
+    return _delete_row("historico_historico", item_id)
+
+
+@fastapi_app.get("/historico-operacoes/checklist/{checklist}")
+def historico_operacoes_por_checklist(checklist: str):
+
+    conn, _ = _open_db("historico_historico")
+
+    try:
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                """
+                SELECT *
+                FROM historico_historico
+                WHERE CHECKLIST_MASTER = %s
+                ORDER BY ID DESC
+                """,
+                (checklist,),
+            )
+
+            return cursor.fetchall()
+
     finally:
         conn.close()
