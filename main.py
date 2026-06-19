@@ -2,7 +2,7 @@ import os
 from typing import Any, Dict, Optional
 
 import pymysql
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 # =========================================================
@@ -17,6 +17,18 @@ fastapi_app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@fastapi_app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return Response(
+        status_code=204,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type,Accept,x-functions-key",
+            "Access-Control-Max-Age": "86400",
+        },
+    )
 
 # =========================================================
 # ENV / DATABASE
@@ -596,6 +608,7 @@ def sugestoes_estoque():
 def listar_historico(request: Request):
     return _select_all("historico_alteracoes", request)
 
+
 @fastapi_app.get("/historico/paginado")
 def listar_historico_paginado(
     limit: int = 50,
@@ -604,9 +617,7 @@ def listar_historico_paginado(
     conn, _ = _open_db("historico_alteracoes")
 
     try:
-
         with conn.cursor() as cursor:
-
             cursor.execute(
                 """
                 SELECT *
@@ -618,9 +629,9 @@ def listar_historico_paginado(
             )
 
             return cursor.fetchall()
-
     finally:
         conn.close()
+
 
 @fastapi_app.get("/historico/{item_id}")
 def obter_historico(item_id: int):
@@ -720,11 +731,11 @@ def login(data: Dict[str, Any]):
         return {"status": "ok", "usuario": user}
     finally:
         conn.close()
-        
+
+
 # =========================================================
 # HISTORICO RECEBIMENTO
 # =========================================================
-
 @fastapi_app.get("/historico-recebimento")
 def listar_historico_recebimento(request: Request):
     return _select_all("historico_recebimento", request)
@@ -738,9 +749,7 @@ def listar_historico_recebimento_paginado(
     conn, _ = _open_db("historico_recebimento")
 
     try:
-
         with conn.cursor() as cursor:
-
             cursor.execute(
                 """
                 SELECT *
@@ -752,7 +761,6 @@ def listar_historico_recebimento_paginado(
             )
 
             return cursor.fetchall()
-
     finally:
         conn.close()
 
@@ -779,13 +787,10 @@ def deletar_historico_recebimento(item_id: int):
 
 @fastapi_app.get("/historico-recebimento/checklist/{checklist}")
 def historico_recebimento_por_checklist(checklist: str):
-
     conn, _ = _open_db("historico_recebimento")
 
     try:
-
         with conn.cursor() as cursor:
-
             cursor.execute(
                 """
                 SELECT *
@@ -797,14 +802,13 @@ def historico_recebimento_por_checklist(checklist: str):
             )
 
             return cursor.fetchall()
-
     finally:
         conn.close()
+
 
 # =========================================================
 # HISTORICO EXPEDICAO
 # =========================================================
-
 @fastapi_app.get("/historico-expedicao")
 def listar_historico_expedicao(request: Request):
     return _select_all("historico_expedicao", request)
@@ -818,9 +822,7 @@ def listar_historico_expedicao_paginado(
     conn, _ = _open_db("historico_expedicao")
 
     try:
-
         with conn.cursor() as cursor:
-
             cursor.execute(
                 """
                 SELECT *
@@ -832,7 +834,6 @@ def listar_historico_expedicao_paginado(
             )
 
             return cursor.fetchall()
-
     finally:
         conn.close()
 
@@ -859,13 +860,10 @@ def deletar_historico_expedicao(item_id: int):
 
 @fastapi_app.get("/historico-expedicao/checklist/{checklist}")
 def historico_expedicao_por_checklist(checklist: str):
-
     conn, _ = _open_db("historico_expedicao")
 
     try:
-
         with conn.cursor() as cursor:
-
             cursor.execute(
                 """
                 SELECT *
@@ -877,6 +875,5 @@ def historico_expedicao_por_checklist(checklist: str):
             )
 
             return cursor.fetchall()
-
     finally:
         conn.close()
